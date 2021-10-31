@@ -5,8 +5,4 @@
     <TargetFramework>net35</TargetFramework>
   </PropertyGroup>
 
-   <ItemGroup>
-      <ProjectReference Include="..\..\src\XUnity.RuntimeHooker\XUnity.RuntimeHooker.csproj" />
-   </ItemGroup>
-
 </Project>

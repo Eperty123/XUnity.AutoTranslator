@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 using UnityEngine;
-using XUnity.AutoTranslator.Plugin.Core.Constants;
 using XUnity.Common.Constants;
 
 namespace XUnity.AutoTranslator.Plugin.Core

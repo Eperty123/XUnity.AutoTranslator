@@ -19,7 +19,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,26 +57,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Properties {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 【アイシャドウ】カラー=[Eye Shadow] Color
-        ///【アクセサリ(スロット０１)】カラー=[Accessory 01] Color
-        ///【アクセサリ(スロット０１)】ツヤの色=[Accessory 01] Shine Color
-        ///【アクセサリ(スロット０２)】カラー=[Accessory 02] Color
-        ///【アクセサリ(スロット０２)】ツヤの色=[Accessory 02] Shine Color
-        ///【アクセサリ(スロット０３)】カラー=[Accessory 03] Color
-        ///【アクセサリ(スロット０３)】ツヤの色=[Accessory 03] Shine Color
-        ///【アクセサリ(スロット０４)】カラー=[Accessory 04] Color
-        ///【アクセサリ(スロット０４)】ツヤの色=[Accessory 04] Shine Color
-        ///【アクセサリ(スロット０５)】カラー=[Accessory 05] Color
-        ///【アクセサリ(スロット０５)】ツヤの色=[Accessory 05] Shine Color
-        ///【アクセサリ(スロット０６)】カラー=[Accessory 06] C [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string StaticTranslations {
-            get {
-                return ResourceManager.GetString("StaticTranslations", resourceCulture);
             }
         }
     }

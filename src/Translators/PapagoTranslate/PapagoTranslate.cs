@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using SimpleJSON;
 using XUnity.AutoTranslator.Plugin.Core;
-using XUnity.AutoTranslator.Plugin.Core.Constants;
+
 using XUnity.AutoTranslator.Plugin.Core.Endpoints;
 using XUnity.AutoTranslator.Plugin.Core.Endpoints.Http;
 using XUnity.AutoTranslator.Plugin.Core.Utilities;

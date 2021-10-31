@@ -13,31 +13,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Utilities
    /// </summary>
    internal static class RomanizationHelper
    {
-      public static string PostProcess( string text, TextPostProcessing postProcessing )
-      {
-         if( ( postProcessing & TextPostProcessing.ReplaceHtmlEntities ) != 0 )
-         {
-            text = WebUtility.HtmlDecode( text );
-         }
-         if( ( postProcessing & TextPostProcessing.ReplaceMacronWithCircumflex ) != 0 )
-         {
-            text = ConvertMacronToCircumflex( text );
-         }
-         if( ( postProcessing & TextPostProcessing.RemoveAllDiacritics ) != 0 )
-         {
-            text = RemoveAllDiacritics( text );
-         }
-         if( ( postProcessing & TextPostProcessing.RemoveApostrophes ) != 0 )
-         {
-            text = RemoveNApostrophe( text );
-         }
-         if( ( postProcessing & TextPostProcessing.ReplaceWideCharacters ) != 0 )
-         {
-            text = ReplaceWideCharacters( text );
-         }
-         return text;
-      }
-
       public static string ReplaceWideCharacters( string input )
       {
          var builder = new StringBuilder( input );

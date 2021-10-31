@@ -6,7 +6,7 @@ using System.Text;
 using SimpleJSON;
 using XUnity.AutoTranslator.Plugin.Core;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
-using XUnity.AutoTranslator.Plugin.Core.Constants;
+
 using XUnity.AutoTranslator.Plugin.Core.Endpoints;
 using XUnity.AutoTranslator.Plugin.Core.Endpoints.Www;
 using XUnity.AutoTranslator.Plugin.Core.Extensions;

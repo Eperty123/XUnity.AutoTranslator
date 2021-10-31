@@ -8,7 +8,6 @@
 
    <ItemGroup>
      <ProjectReference Include="..\..\src\XUnity.AutoTranslator.Plugin.Core\XUnity.AutoTranslator.Plugin.Core.csproj" />
-     <ProjectReference Include="..\..\src\XUnity.RuntimeHooker\XUnity.RuntimeHooker.csproj" />
    </ItemGroup>
 
    <ItemGroup>

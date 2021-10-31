@@ -9,7 +9,7 @@ using System.Text;
 using SimpleJSON;
 using XUnity.AutoTranslator.Plugin.Core;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
-using XUnity.AutoTranslator.Plugin.Core.Constants;
+
 using XUnity.AutoTranslator.Plugin.Core.Endpoints;
 using XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol;
 using XUnity.AutoTranslator.Plugin.Core.Endpoints.Http;

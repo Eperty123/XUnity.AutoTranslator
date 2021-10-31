@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Net;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
-using XUnity.AutoTranslator.Plugin.Core.Configuration;
-using XUnity.AutoTranslator.Plugin.Core.Constants;
-using XUnity.AutoTranslator.Plugin.Core.Hooks;
-using XUnity.AutoTranslator.Plugin.Core.Web;
 using XUnity.Common.Constants;
 using XUnity.Common.Harmony;
 

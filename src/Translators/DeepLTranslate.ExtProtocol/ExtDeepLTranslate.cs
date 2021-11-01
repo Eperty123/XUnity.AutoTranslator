@@ -364,12 +364,12 @@ namespace DeepLTranslate.ExtProtocol
             }
 
             var t = fullTranslatedText.ToString();
-            if( string.IsNullOrWhiteSpace( t ) )
-            {
-               throw new Exception( "Found no valid translations in beam!" );
-            }
-
-            translatedTexts.Add( t );
+            //if( string.IsNullOrWhiteSpace( t ) )
+            //{
+            //   throw new Exception( "Found no valid translations in beam!" );
+            //}
+            if( !string.IsNullOrWhiteSpace( t ) )
+               translatedTexts.Add( t );
          }
 
          context.Complete( translatedTexts.ToArray() );

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
 using XUnity.AutoTranslator.Plugin.Core.Constants;
 using XUnity.AutoTranslator.Plugin.Core.Extensions;
@@ -10,6 +11,7 @@ using XUnity.AutoTranslator.Plugin.Core.Utilities;
 using XUnity.Common.Constants;
 using XUnity.Common.Harmony;
 using XUnity.Common.MonoMod;
+using XUnity.Common.Utilities;
 
 namespace XUnity.AutoTranslator.Plugin.Core.Hooks
 {
@@ -17,9 +19,13 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
    {
       public static readonly Type[] All = new[] {
          typeof( AdvEngine_JumpScenario_Hook ),
-         typeof( UnityEventBase_Invoke_Hook ),
-         typeof( UnityEventBase_PrepareInvoke_Hook ),
-         typeof( AdvPage_RemakeTextData_Hook ),
+         typeof( UguiNovelTextGenerator_LengthOfView_Hook ),
+
+#if MANAGED
+         typeof( TextArea2D_text_Hook ),
+         typeof( TextArea2D_TextData_Hook ),
+         typeof( TextData_ctor_Hook ),
+#endif
       };
    }
    
@@ -27,12 +33,12 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
    {
       static bool Prepare( object instance )
       {
-         return ClrTypes.AdvEngine != null;
+         return UnityTypes.AdvEngine != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return AccessToolsShim.Method( ClrTypes.AdvEngine, "JumpScenario", new Type[] { typeof( string ) } );
+         return AccessToolsShim.Method( UnityTypes.AdvEngine?.ClrType, "JumpScenario", new Type[] { typeof( string ) } );
       }
 
       static void Prefix( ref string label )
@@ -40,6 +46,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
          UtageHelper.FixLabel( ref label );
       }
 
+#if MANAGED
       static Action<object, string> _original;
 
       static void MM_Init( object detour )
@@ -53,134 +60,163 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
 
          _original( __instance, value );
       }
+#endif
    }
-   
-   internal static class UnityEventBase_Invoke_Hook
+
+   internal static class UguiNovelTextGenerator_LengthOfView_Hook
    {
       static bool Prepare( object instance )
       {
-         return ClrTypes.UnityEventBase != null;
+         return UnityTypes.UguiNovelTextGenerator != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return AccessToolsShim.Method( ClrTypes.UnityEventBase, "Invoke", new Type[] { typeof( object[] ) } );
+         return AccessToolsShim.Property( UnityTypes.UguiNovelTextGenerator?.ClrType, "LengthOfView" ).GetSetMethod( true );
       }
 
-      static bool Prefix()
+      static void Prefix( ref int value )
       {
-         return Settings.InvokeEvents;
+         value = -1;
       }
 
-      static Action<object, object[]> _original;
+#if MANAGED
+      static Action<object, int> _original;
 
       static void MM_Init( object detour )
       {
-         _original = detour.GenerateTrampolineEx<Action<object, object[]>>();
+         _original = detour.GenerateTrampolineEx<Action<object, int>>();
       }
 
-      static void MM_Detour( object __instance, object[] args )
+      static void MM_Detour( object __instance, int value )
       {
-         var ok = Prefix();
+         Prefix( ref value );
 
-         if( ok )
-         {
-            _original( __instance, args );
-         }
+         _original( __instance, value );
       }
+#endif
    }
-   
-   internal static class UnityEventBase_PrepareInvoke_Hook
-   {
-      private static MethodInfo Method;
-      private static object DefaultResult;
 
+   [HookingHelperPriority( HookPriority.Last )]
+   internal static class TextArea2D_text_Hook
+   {
       static bool Prepare( object instance )
       {
-         try
-         {
-            Method = AccessToolsShim.Method( ClrTypes.UnityEventBase, "PrepareInvoke" );
-            DefaultResult = Activator.CreateInstance( typeof( List<> ).MakeGenericType( ClrTypes.BaseInvokableCall ) );
-
-            return Method != null;
-         }
-         catch
-         {
-            
-         }
-
-         return false;
+         return UnityTypes.TextArea2D != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return Method;
+         return AccessToolsShim.Property( UnityTypes.TextArea2D?.ClrType, "text" )?.GetSetMethod();
       }
 
-      static void Postfix( ref object __result )
+      static void Postfix( Component __instance )
       {
-         if( !Settings.InvokeEvents )
-         {
-            __result = DefaultResult;
-         }
+#if IL2CPP
+         __instance = (Component)Il2CppUtilities.CreateProxyComponentWithDerivedType( __instance.Pointer, UnityTypes.TextArea2D.ClrType );
+#endif
+
+         _Postfix( __instance );
       }
 
-      static Func<object, object> _original;
+      static void _Postfix( Component __instance )
+      {
+         AutoTranslationPlugin.Current.Hook_TextChanged( __instance, false );
+      }
+
+#if MANAGED
+      static Action<Component, string> _original;
 
       static void MM_Init( object detour )
       {
-         _original = detour.GenerateTrampolineEx<Func<object, object>>();
+         _original = detour.GenerateTrampolineEx<Action<Component, string>>();
       }
 
-      static object MM_Detour( object __instance )
+      static void MM_Detour( Component __instance, string value )
       {
-         var result = _original( __instance );
+         _original( __instance, value );
 
-         Postfix( ref result );
-
-         return result;
+         Postfix( __instance );
       }
+#endif
    }
-   
-   internal static class AdvPage_RemakeTextData_Hook
+
+   [HookingHelperPriority( HookPriority.Last )]
+   internal static class TextArea2D_TextData_Hook
    {
       static bool Prepare( object instance )
       {
-         return ClrTypes.AdvPage != null;
+         return UnityTypes.TextArea2D != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return AccessToolsShim.Method( ClrTypes.AdvPage, "RemakeTextData" );
+         return AccessToolsShim.Property( UnityTypes.TextArea2D.ClrType, "TextData" )?.GetSetMethod();
       }
 
-      static bool Prefix( object __instance )
+      static void Postfix( Component __instance )
       {
-         if( Settings.RemakeTextData != null )
-         {
-            Settings.RemakeTextData( __instance );
+#if IL2CPP
+         __instance = (Component)Il2CppUtilities.CreateProxyComponentWithDerivedType( __instance.Pointer, UnityTypes.TextArea2D.ClrType );
+#endif
 
-            return false;
-         }
-
-         return true;
+         _Postfix( __instance );
       }
 
-      static Action<object> _original;
+      static void _Postfix( Component __instance )
+      {
+         AutoTranslationPlugin.Current.Hook_TextChanged( __instance, false );
+      }
+
+#if MANAGED
+      static Action<Component, object> _original;
 
       static void MM_Init( object detour )
       {
-         _original = detour.GenerateTrampolineEx<Action<object>>();
+         _original = detour.GenerateTrampolineEx<Action<Component, object>>();
       }
 
-      static void MM_Detour( object __instance )
+      static void MM_Detour( Component __instance, object value )
       {
-         var ok = Prefix( __instance );
+         _original( __instance, value );
 
-         if( ok )
-         {
-            _original( __instance );
-         }
+         Postfix( __instance );
       }
+#endif
+   }
+
+   [HookingHelperPriority( HookPriority.Last )]
+   internal static class TextData_ctor_Hook
+   {
+      static bool Prepare( object instance )
+      {
+         return UnityTypes.TextData != null;
+      }
+
+      static MethodBase TargetMethod( object instance )
+      {
+         return UnityTypes.TextData.ClrType.GetConstructor( new[] { typeof( string ) } );
+      }
+
+      static void Postfix( object __instance, string text )
+      {
+         __instance.SetExtensionData( text );
+      }
+
+#if MANAGED
+      static Action<object, string> _original;
+
+      static void MM_Init( object detour )
+      {
+         _original = detour.GenerateTrampolineEx<Action<object, string>>();
+      }
+
+      static void MM_Detour( object __instance, string text )
+      {
+         _original( __instance, text );
+
+         Postfix( __instance, text );
+      }
+#endif
    }
 }

@@ -28,7 +28,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Utilities
 
       private IEnumerator Run()
       {
-         yield return new WaitForSeconds( _delaySeconds );
+         yield return CoroutineHelper.CreateWaitForSeconds( _delaySeconds );
 
          _callback();
 

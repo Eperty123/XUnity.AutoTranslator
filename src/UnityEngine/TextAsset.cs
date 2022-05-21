@@ -12,7 +12,14 @@ namespace UnityEngine
 {
    public class TextAsset : Object
    {
+      public TextAsset( IntPtr pointer ) : base( IntPtr.Zero ) => throw new NotImplementedException();
+
       public string text => throw new NotImplementedException();
+
+#if IL2CPP
+      public UnhollowerBaseLib.Il2CppStructArray<byte> bytes => throw new NotImplementedException();
+#else
       public byte[] bytes => throw new NotImplementedException();
+#endif
    }
 }

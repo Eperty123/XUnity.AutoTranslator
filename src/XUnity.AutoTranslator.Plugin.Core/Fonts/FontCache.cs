@@ -13,88 +13,85 @@ namespace XUnity.AutoTranslator.Plugin.Core.Fonts
    internal static class FontCache
    {
       private static readonly Dictionary<int, Font> CachedFonts = new Dictionary<int, Font>();
-      private static UnityEngine.Object TextMeshProOverrideFont;
-      private static bool _hasReadTextMeshProFont = false;
+      private static bool _hasReadOverrideFontTextMeshPro = false;
+      private static UnityEngine.Object OverrideFontTextMeshPro;
+      private static bool _hasReadFallbackFontTextMeshPro = false;
+      private static UnityEngine.Object FallbackFontTextMeshPro;
 
       public static Font GetOrCreate( int size )
       {
          if( !CachedFonts.TryGetValue( size, out Font font ) )
          {
-            font = Font.CreateDynamicFontFromOSFont( Settings.OverrideFont, size );
-            GameObject.DontDestroyOnLoad( font );
+            font = FontHelper.GetTextFont( size );
             CachedFonts.Add( size, font );
          }
          return font;
       }
 
-      public static object GetOrCreateTextMeshProFont()
+      public static object GetOrCreateOverrideFontTextMeshPro()
       {
-         if( !_hasReadTextMeshProFont )
+         if( !_hasReadOverrideFontTextMeshPro )
          {
             try
             {
-               _hasReadTextMeshProFont = true;
+               _hasReadOverrideFontTextMeshPro = true;
+               OverrideFontTextMeshPro = FontHelper.GetTextMeshProFont( Settings.OverrideFontTextMeshPro );
+            }
+#if IL2CPP
+            catch( Exception e ) when( e.ToString().ToLowerInvariant().Contains( "missing" ) || e.ToString().ToLowerInvariant().Contains( "not found" ) )
+            {
+               XuaLogger.AutoTranslator.Warn( e, "An error occurred while loading text mesh pro override font. Retrying load with custom proxies..." );
 
-               var overrideFontPath = Path.Combine( Paths.GameRoot, Settings.OverrideFontTextMeshPro );
-               if( File.Exists( overrideFontPath ) )
+               try
                {
-                  XuaLogger.AutoTranslator.Info( "Attempting to load TextMesh Pro font from asset bundle." );
-
-                  AssetBundle bundle = null;
-                  if( ClrTypes.AssetBundle_Methods.LoadFromFile != null )
-                  {
-                     bundle = (AssetBundle)ClrTypes.AssetBundle_Methods.LoadFromFile.Invoke( null, new object[] { overrideFontPath } );
-                  }
-                  else if( ClrTypes.AssetBundle_Methods.CreateFromFile != null )
-                  {
-                     bundle = (AssetBundle)ClrTypes.AssetBundle_Methods.CreateFromFile.Invoke( null, new object[] { overrideFontPath } );
-                  }
-                  else
-                  {
-                     XuaLogger.AutoTranslator.Error( "Could not find an appropriate asset bundle load method while loading font: " + overrideFontPath );
-                     return null;
-                  }
-
-                  if( bundle == null )
-                  {
-                     XuaLogger.AutoTranslator.Warn( "Could not load asset bundle while loading font: " + overrideFontPath );
-                     return null;
-                  }
-
-                  if( ClrTypes.AssetBundle_Methods.LoadAllAssets != null )
-                  {
-                     var assets = (UnityEngine.Object[])ClrTypes.AssetBundle_Methods.LoadAllAssets.Invoke( bundle, new object[] { ClrTypes.FontAsset } );
-                     TextMeshProOverrideFont = assets?.FirstOrDefault();
-                  }
-                  else if( ClrTypes.AssetBundle_Methods.LoadAll != null )
-                  {
-                     var assets = (UnityEngine.Object[])ClrTypes.AssetBundle_Methods.LoadAll.Invoke( bundle, new object[] { ClrTypes.FontAsset } );
-                     TextMeshProOverrideFont = assets?.FirstOrDefault();
-                  }
+                  OverrideFontTextMeshPro = FontHelper.GetTextMeshProFontByCustomProxies( Settings.OverrideFontTextMeshPro );
                }
-               else
+               catch( Exception ex )
                {
-                  XuaLogger.AutoTranslator.Info( "Attempting to load TextMesh Pro font from internal Resources API." );
-
-                  TextMeshProOverrideFont = Resources.Load( Settings.OverrideFontTextMeshPro );
-               }
-
-               if( TextMeshProOverrideFont != null )
-               {
-                  GameObject.DontDestroyOnLoad( TextMeshProOverrideFont );
-               }
-               else
-               {
-                  XuaLogger.AutoTranslator.Error( "Could not find the TextMeshPro font asset: " + Settings.OverrideFontTextMeshPro );
+                  XuaLogger.AutoTranslator.Error( ex, "An error occurred while loading text mesh pro override font: " + Settings.OverrideFontTextMeshPro );
                }
             }
+#endif
             catch( Exception e )
             {
                XuaLogger.AutoTranslator.Error( e, "An error occurred while loading text mesh pro override font: " + Settings.OverrideFontTextMeshPro );
             }
          }
 
-         return TextMeshProOverrideFont;
+         return OverrideFontTextMeshPro;
+      }
+
+      public static UnityEngine.Object GetOrCreateFallbackFontTextMeshPro()
+      {
+         if( !_hasReadFallbackFontTextMeshPro )
+         {
+            try
+            {
+               _hasReadFallbackFontTextMeshPro = true;
+               FallbackFontTextMeshPro = FontHelper.GetTextMeshProFont( Settings.FallbackFontTextMeshPro );
+            }
+#if IL2CPP
+            catch( Exception e ) when( e.ToString().ToLowerInvariant().Contains( "missing" ) || e.ToString().ToLowerInvariant().Contains( "not found" ) )
+            {
+               XuaLogger.AutoTranslator.Warn( e, "An error occurred while loading text mesh pro fallback font. Retrying load with custom proxies..." );
+
+               try
+               {
+                  FallbackFontTextMeshPro = FontHelper.GetTextMeshProFontByCustomProxies( Settings.FallbackFontTextMeshPro );
+               }
+               catch( Exception ex )
+               {
+                  XuaLogger.AutoTranslator.Error( ex, "An error occurred while loading text mesh pro fallback font: " + Settings.FallbackFontTextMeshPro );
+               }
+            }
+#endif
+            catch( Exception e )
+            {
+               XuaLogger.AutoTranslator.Error( e, "An error occurred while loading text mesh pro fallback font: " + Settings.FallbackFontTextMeshPro );
+            }
+         }
+
+         return FallbackFontTextMeshPro;
       }
    }
 }

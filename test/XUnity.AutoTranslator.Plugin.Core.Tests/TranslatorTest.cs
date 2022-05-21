@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using XUnity.AutoTranslator.Plugin.Core.Endpoints;
+using XUnity.Common.Constants;
+using XUnity.Common.Utilities;
 
 namespace XUnity.AutoTranslator.Plugin.Core.Tests
 {
@@ -17,7 +21,8 @@ namespace XUnity.AutoTranslator.Plugin.Core.Tests
 
          ServicePointManager.ServerCertificateValidationCallback += ( a1, a2, a3, a4 ) => true;
          TimeSupport.Time = new DotNetTime();
-         Features.SupportsWaitForSecondsRealtime = false;
+         UnityFeatures.SupportsWaitForSecondsRealtime = false;
+         Paths.GameRoot = Environment.CurrentDirectory;
 
          ThreadPool.QueueUserWorkItem( Run );
       }

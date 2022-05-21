@@ -38,7 +38,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
          }
       }
 
-      public static IReadOnlyTextTranslationCache GetTextCache( TextTranslationInfo info, TextTranslationCache generic )
+      internal static IReadOnlyTextTranslationCache GetTextCache( TextTranslationInfo info, TextTranslationCache generic )
       {
          if( info != null )
          {
@@ -61,13 +61,14 @@ namespace XUnity.AutoTranslator.Plugin.Core
          SetTextCacheForAllObjectsInHierachy( root.gameObject, info.TextCache );
       }
 
-      public static void SetTextCacheForAllObjectsInHierachy( GameObject go, IReadOnlyTextTranslationCache cache )
+      public static void SetTextCacheForAllObjectsInHierachy( this GameObject go, IReadOnlyTextTranslationCache cache )
       {
          try
          {
             foreach( var comp in go.GetAllTextComponentsInChildren() )
             {
-               var info = comp.GetOrCreateTextTranslationInfo();
+               var derivedComp = comp.CreateDerivedProxyIfRequiredAndPossible();
+               var info = derivedComp.GetOrCreateTextTranslationInfo();
                info.TextCache = cache;
             }
 
@@ -89,6 +90,8 @@ namespace XUnity.AutoTranslator.Plugin.Core
          {
             var trace = new StackTrace( 2 );
             var caches = AutoTranslationPlugin.Current.PluginTextCaches;
+            if( caches == null ) return null;
+
             var frames = trace.GetFrames();
             var len = frames.Length;
             for( int i = 0; i < len; i++ )

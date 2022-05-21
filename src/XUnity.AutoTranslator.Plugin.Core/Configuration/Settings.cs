@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core.Constants;
 using XUnity.AutoTranslator.Plugin.Core.Debugging;
 using XUnity.AutoTranslator.Plugin.Core.Extensions;
 using XUnity.AutoTranslator.Plugin.Core.Parsing;
 using XUnity.AutoTranslator.Plugin.Core.Utilities;
+using XUnity.AutoTranslator.Plugin.Utilities;
+using XUnity.Common.Constants;
 using XUnity.Common.Extensions;
 using XUnity.Common.Logging;
 
@@ -18,6 +21,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
    internal static class Settings
    {
       // cannot be changed
+      public static string TextMeshProVersion = null;
       public static readonly int MaxFailuresForSameTextPerEndpoint = 3;
       public static readonly string TranslatorsFolder = "Translators";
       public static readonly int MaxMaxCharactersPerTranslation = 2500;
@@ -26,7 +30,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
       public static readonly string EnglishLanguage = "en";
       public static readonly string Romaji = "romaji";
       public static readonly int MaxErrors = 5;
-      public static readonly float ClipboardDebounceTime = 1.250f;
       public static readonly int MaxTranslationsBeforeShutdown = 8000;
       public static readonly int MaxUnstartedJobs = 4000;
       public static readonly float IncreaseBatchOperationsEvery = 30;
@@ -39,6 +42,9 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
       public static string ApplicationName;
       public static float Timeout = 150.0f;
       public static string RedirectedResourcesPath;
+      public static readonly int MaxImguiKeyCacheCount = 10000;
+      public static readonly float DefaultTranslationDelay = 0.9f;
+      public static readonly int DefaultMaxRetries = 67;
 
       public static Dictionary<string, string> Replacements = new Dictionary<string, string>();
       public static Dictionary<string, string> Preprocessors = new Dictionary<string, string>();
@@ -59,8 +65,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
       public static readonly float MaxTranslationsQueuedPerSecond = 5;
       public static readonly int MaxSecondsAboveTranslationThreshold = 30;
       public static readonly int TranslationQueueWatchWindow = 6;
-
-      public static bool RequiresToggleFix = false;
 
       // can be changed
       public static string ServiceEndpoint;
@@ -89,7 +93,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
       public static bool EnableFairyGUI;
       public static bool InitializeHarmonyDetourBridge;
       public static bool IgnoreWhitespaceInDialogue;
-      public static bool IgnoreWhitespaceInNGUI;
       public static int MinDialogueChars;
       public static int ForceSplitTextAfterCharacters;
       public static bool EnableMigrations;
@@ -100,6 +103,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
       public static string OverrideFont;
       public static int? OverrideFontSize;
       public static string OverrideFontTextMeshPro;
+      public static string FallbackFontTextMeshPro;
       public static string UserAgent;
       public static bool DisableCertificateValidation;
       public static float? ResizeUILineSpacingScale;
@@ -160,12 +164,13 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
 
       public static bool CopyToClipboard;
       public static int MaxClipboardCopyCharacters;
+      public static float ClipboardDebounceTime;
 
       public static void Configure()
       {
          try
          {
-            var fi = new FileInfo( typeof( TranslationManager ).Assembly.Location );
+            var fi = new FileInfo( typeof( Settings ).Assembly.Location );
             var di = fi.Directory;
             TranslatorsPath = Path.Combine( di.FullName, TranslatorsFolder );
 
@@ -196,6 +201,20 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
                XuaLogger.AutoTranslator.Warn( e, "An error occurred while trying to determine the game resolution." );
             }
 
+            try
+            {
+               var versionProperty = UnityTypes.TMP_Settings_Properties.Version;
+               if( versionProperty != null )
+               {
+                  TextMeshProVersion = (string)versionProperty.Get( null );
+                  XuaLogger.AutoTranslator.Info( $"Version of TextMesh Pro: {TextMeshProVersion}." );
+               }
+            }
+            catch( Exception e )
+            {
+               XuaLogger.AutoTranslator.Warn( e, "An error occurred while trying to determine TextMesh Pro version." );
+            }
+
             ServiceEndpoint = PluginEnvironment.Current.Preferences.GetOrDefault( "Service", "Endpoint", KnownTranslateEndpointNames.GoogleTranslateV2 );
             FallbackServiceEndpoint = PluginEnvironment.Current.Preferences.GetOrDefault( "Service", "FallbackEndpoint", string.Empty );
 
@@ -217,17 +236,18 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
 
             MaxCharactersPerTranslation = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "MaxCharactersPerTranslation", 200 );
             IgnoreWhitespaceInDialogue = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "IgnoreWhitespaceInDialogue", true );
-            IgnoreWhitespaceInNGUI = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "IgnoreWhitespaceInNGUI", true );
             MinDialogueChars = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "MinDialogueChars", 20 );
             ForceSplitTextAfterCharacters = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "ForceSplitTextAfterCharacters", 0 );
             CopyToClipboard = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "CopyToClipboard", false );
             MaxClipboardCopyCharacters = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "MaxClipboardCopyCharacters", 2500 );
+            ClipboardDebounceTime = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "ClipboardDebounceTime", 1.25f );
             EnableUIResizing = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "EnableUIResizing", true );
             EnableBatching = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "EnableBatching", true );
             UseStaticTranslations = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "UseStaticTranslations", true );
             OverrideFont = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "OverrideFont", string.Empty );
             OverrideFontSize = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "OverrideFontSize", (int?)null );
             OverrideFontTextMeshPro = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "OverrideFontTextMeshPro", string.Empty );
+            FallbackFontTextMeshPro = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "FallbackFontTextMeshPro", string.Empty );
             ResizeUILineSpacingScale = PluginEnvironment.Current.Preferences.GetOrDefault<float?>( "Behaviour", "ResizeUILineSpacingScale", null );
             ForceUIResizing = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "ForceUIResizing", false );
             IgnoreTextStartingWith = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "IgnoreTextStartingWith", "\\u180e;" )
@@ -259,12 +279,12 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
             HandleRichText = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "HandleRichText", true );
             EnableTranslationHelper = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "EnableTranslationHelper", false );
             ForceMonoModHooks = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "ForceMonoModHooks", false );
-            InitializeHarmonyDetourBridge = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "InitializeHarmonyDetourBridge", !Features.SupportsReflectionEmit && PluginEnvironment.Current.AllowDefaultInitializeHarmonyDetourBridge );
+            InitializeHarmonyDetourBridge = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "InitializeHarmonyDetourBridge", !ClrFeatures.SupportsReflectionEmit && PluginEnvironment.Current.AllowDefaultInitializeHarmonyDetourBridge );
             RedirectedResourceDetectionStrategy = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "RedirectedResourceDetectionStrategy", RedirectedResourceDetection.AppendMongolianVowelSeparatorAndRemoveAll );
             OutputTooLongText = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "OutputTooLongText", false );
             TemplateAllNumberAway = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "TemplateAllNumberAway", false );
             ReloadTranslationsOnFileChange = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "ReloadTranslationsOnFileChange", false );
-            DisableTextMeshProScrollInEffects = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "DisableTextMeshProScrollInEffects", ApplicationName.Equals( "SamuraiVandalism", StringComparison.OrdinalIgnoreCase ) );
+            DisableTextMeshProScrollInEffects = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "DisableTextMeshProScrollInEffects", ApplicationName.Equals( "SamuraiVandalism", StringComparison.OrdinalIgnoreCase ) || UnityTypes.UguiNovelText != null );
             CacheParsedTranslations = PluginEnvironment.Current.Preferences.GetOrDefault( "Behaviour", "CacheParsedTranslations", false );
 
             TextureDirectory = PluginEnvironment.Current.Preferences.GetOrDefault( "Texture", "TextureDirectory", Path.Combine( "Translation", Path.Combine( "{Lang}", "Texture" ) ) );
@@ -289,7 +309,15 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
             LogAllLoadedResources = PluginEnvironment.Current.Preferences.GetOrDefault( "ResourceRedirector", "LogAllLoadedResources", false );
             EnableDumping = PluginEnvironment.Current.Preferences.GetOrDefault( "ResourceRedirector", "EnableDumping", false );
             CacheMetadataForAllFiles = PluginEnvironment.Current.Preferences.GetOrDefault( "ResourceRedirector", "CacheMetadataForAllFiles", true );
-            
+
+            if( ClipboardDebounceTime < 0.1f )
+            {
+               XuaLogger.AutoTranslator.Warn( "'ClipboardDebounceTime' must not be lower than 0.1. Setting it to that..." );
+
+               ClipboardDebounceTime = 0.1f;
+
+            }
+
             if( CacheMetadataForAllFiles && EnableDumping )
             {
                XuaLogger.AutoTranslator.Warn( "'EnableDumping' and 'CacheMetadataForAllFiles' cannot be enabled at the same time. Disabling 'CacheMetadataForAllFiles'..." );
@@ -331,7 +359,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
             FromLanguageUsesWhitespaceBetweenWords = LanguageHelper.RequiresWhitespaceUponLineMerging( FromLanguage );
             ToLanguageUsesWhitespaceBetweenWords = LanguageHelper.RequiresWhitespaceUponLineMerging( Language );
 
-            if( EnableTranslationScoping && !Features.SupportsSceneManager )
+            if( EnableTranslationScoping && !UnityFeatures.SupportsSceneManager )
             {
                EnableTranslationScoping = false;
 
@@ -425,14 +453,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Configuration
 
       private static void Migrate()
       {
-      }
-
-      private static bool GetInitialDisableCertificateChecks()
-      {
-         var is2017 = Application.unityVersion.StartsWith( "2017" );
-         var isNet4x = Features.SupportsNet4x;
-
-         return is2017 && isNet4x;
       }
    }
 }

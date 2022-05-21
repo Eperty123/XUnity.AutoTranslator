@@ -1,4 +1,38 @@
-﻿### 4.19.0
+﻿### 5.1.0
+ * BREAKING CHANGE - Fixed escaping for '='-sign in translation files. Now uses '\=' instead of '%3D', though '%3D' is still recognized as newline when reading translations
+ * FEATURE - Added automatic translation pruning for translations replaced by regexes in the standard output file. Does not work for splitter regexes
+ * BUG FIX - Fixed an issue related to TextMesh Pro font fallback in MelonLoader
+ * BUG FIX - Fixed a bug related to splitter regex construction
+ * BUG FIX - Fixed issue related reloading translations
+ * BUG FIX - Added warnings for badly formed regexes
+ * MISC - Reduced Translation Aggregator window delay from 2 seconds to 1 second
+ * MISC - Improved error logging associated with translation reading
+ * MISC - ezTransXP and LEC now not affected by anti spam measures as though it was an online endpoint
+
+### 5.0.0
+ * FEATURE - Basic IL2CPP support through BepInEx 6 and MelonLoader
+ * FEATURE - MelonLoader support
+ * FEATURE - Added FallbackFontTextMeshPro as an alternative to OverrideFontTextMeshPro. If game supports, it is recommended to use that instead
+ * FEATURE - Added ClipboardDebounceTime that can control how long time between a text is shown until it reaches the clipboard
+ * MISC - Renamed BepInEx plugin package from BepIn-5x to BepInEx. If updating remember to remove the old BepIn-5x DLL
+ * MISC - UTAGE support re-implemented from scratch to better support IL2CPP
+ * BUG FIX - Fixed text escaping error related to GoogleTranslateV2
+ * BUG FIX - Fixed issue that could cause texts not to be hooked in certain situations during component initialization
+
+### 4.21.0
+ * FEATURE - Added support for additional control over spam handling/translation delays to improve support for offline translators
+ * BUG FIX - Properly handle shutdown of ExtProtocolEndpoints
+ * BUG FIX - Fixed PapagoTranslate
+ * BUG FIX - Fixed an issue related to cleanup of web resources applicable to certain runtimes
+ * MISC - Reorganization of code in relation to soon-to-be merging of IL2CPP branch with master
+
+### 4.20.1
+ * MISC - Performance improvements for IMGUI translations
+
+### 4.20.0
+ * FEATURE - Added TMP_Overflow and TMP_Alignment resize commands
+
+### 4.19.0
  * FEATURE - Added RegexPostProcessing configuration option
  * BUG FIX - Fixed bug related to reload translations after changing screen size
 

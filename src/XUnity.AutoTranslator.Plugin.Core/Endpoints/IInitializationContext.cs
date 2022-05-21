@@ -8,12 +8,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
    public interface IInitializationContext
    {
       /// <summary>
-      /// Gets the directory where the configuration file and translations are stored.
-      /// </summary>
-      [Obsolete( "This property is not reliable.", true )]
-      string PluginDirectory { get; }
-
-      /// <summary>
       /// Gets the directory where the translators are placed in.
       /// </summary>
       string TranslatorDirectory { get; }
@@ -61,5 +55,16 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
       /// Gets the destination language that the plugin is configured with.
       /// </summary>
       string DestinationLanguage { get; }
+
+      /// <summary>
+      /// Disables the spam checks for this endpoint.
+      /// </summary>
+      void DisableSpamChecks();
+
+      /// <summary>
+      /// Sets the translation delay.
+      /// </summary>
+      /// <param name="delayInSeconds">The translation delay in seconds. Should not be lower than 0.1 seconds.</param>
+      void SetTranslationDelay( float delayInSeconds );
    }
 }

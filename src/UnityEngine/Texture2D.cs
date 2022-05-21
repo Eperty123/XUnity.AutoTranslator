@@ -8,6 +8,10 @@ using System.Text;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
+#if IL2CPP
+using UnhollowerBaseLib;
+#endif
+
 namespace UnityEngine
 {
    public sealed class Texture2D : Texture
@@ -42,25 +46,15 @@ namespace UnityEngine
          get;
       }
 
-      public Texture2D( int width, int height )
-      {
-         Internal_Create( this, width, height, TextureFormat.RGBA32, mipmap: true, linear: false, IntPtr.Zero );
-      }
+      public Texture2D( IntPtr pointer ) : base( pointer ) => throw new NotImplementedException();
 
-      public Texture2D( int width, int height, TextureFormat format, bool mipmap )
-      {
-         Internal_Create( this, width, height, format, mipmap, linear: false, IntPtr.Zero );
-      }
+      public Texture2D( int width, int height ) : base( IntPtr.Zero ) => throw new NotImplementedException();
 
-      public Texture2D( int width, int height, TextureFormat format, bool mipmap, bool linear )
-      {
-         Internal_Create( this, width, height, format, mipmap, linear, IntPtr.Zero );
-      }
+      public Texture2D( int width, int height, TextureFormat format, bool mipmap ) : base( IntPtr.Zero ) => throw new NotImplementedException();
 
-      internal Texture2D( int width, int height, TextureFormat format, bool mipmap, bool linear, IntPtr nativeTex )
-      {
-         Internal_Create( this, width, height, format, mipmap, linear, nativeTex );
-      }
+      public Texture2D( int width, int height, TextureFormat format, bool mipmap, bool linear ) : base( IntPtr.Zero ) => throw new NotImplementedException();
+
+      internal Texture2D( int width, int height, TextureFormat format, bool mipmap, bool linear, IntPtr nativeTex ) : base( IntPtr.Zero ) => throw new NotImplementedException();
 
       private static extern void Internal_Create( Texture2D mono, int width, int height, TextureFormat format, bool mipmap, bool linear, IntPtr nativeTex );
 
@@ -94,11 +88,11 @@ namespace UnityEngine
 
       private static extern void INTERNAL_CALL_GetPixelBilinear( Texture2D self, float u, float v, out Color value );
 
-      public void SetPixels( Color[] colors )
-      {
-         int miplevel = 0;
-         SetPixels( colors, miplevel );
-      }
+#if IL2CPP
+      public void SetPixels( Il2CppStructArray<Color> colors ) => throw new NotImplementedException();
+#else
+      public void SetPixels( Color[] colors ) => throw new NotImplementedException();
+#endif
 
       public void SetPixels( Color[] colors, int miplevel )
       {
@@ -129,11 +123,11 @@ namespace UnityEngine
 
       private extern void SetBlockOfPixels32( int x, int y, int blockWidth, int blockHeight, Color32[] colors, int miplevel );
 
-      public void SetPixels32( Color32[] colors )
-      {
-         int miplevel = 0;
-         SetPixels32( colors, miplevel );
-      }
+#if IL2CPP
+      public void SetPixels32( Il2CppStructArray<Color32> colors ) => throw new NotImplementedException();
+#else
+      public void SetPixels32( Color32[] colors ) => throw new NotImplementedException();
+#endif
 
       public void SetPixels32( Color32[] colors, int miplevel )
       {

@@ -6,7 +6,9 @@ using System.Text;
 using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Utilities;
 using XUnity.Common.Constants;
+using XUnity.Common.Extensions;
 using XUnity.Common.Logging;
+using XUnity.Common.Utilities;
 
 namespace XUnity.AutoTranslator.Plugin.Core.Utilities
 {
@@ -18,17 +20,27 @@ namespace XUnity.AutoTranslator.Plugin.Core.Utilities
       public static void FixLabel( ref string label )
       {
          var empty = new object[ 0 ];
-         if( AdvManager == null )
+         if( AdvManager == null && UnityTypes.AdvDataManager != null )
          {
             try
             {
-               AdvManager = GameObject.FindObjectOfType( ClrTypes.AdvDataManager );
-               var ScenarioDataTblProperty = ClrTypes.AdvDataManager.GetProperty( "ScenarioDataTbl" );
+               AdvManager = GameObject.FindObjectOfType( UnityTypes.AdvDataManager.UnityType );
+#if IL2CPP
+               AdvManager = Il2CppUtilities.CreateProxyComponentWithDerivedType( ( (UnhollowerBaseLib.Il2CppObjectBase)AdvManager ).Pointer, UnityTypes.AdvDataManager.ClrType );
+#endif
+
+               var ScenarioDataTblProperty = UnityTypes.AdvDataManager.ClrType.GetProperty( "ScenarioDataTbl" );
                var ScenarioDataTbl = ScenarioDataTblProperty.GetValue( AdvManager, empty );
-               foreach( object labelToAdvScenarioDataKeyValuePair in (IEnumerable)ScenarioDataTbl )
+
+#if IL2CPP
+               var iterable1 = new ManagedDictionaryEnumerable( ScenarioDataTbl );
+#else
+               ScenarioDataTbl.TryCastTo<IEnumerable>( out var iterable1 );
+#endif
+
+               foreach( object labelToAdvScenarioDataKeyValuePair in iterable1 )
                {
-                  var labelToAdvScenarioDataKeyValuePairType = typeof( KeyValuePair<,> )
-                     .MakeGenericType( new Type[] { typeof( string ), ClrTypes.AdvScenarioData } );
+                  var labelToAdvScenarioDataKeyValuePairType = labelToAdvScenarioDataKeyValuePair.GetType();
 
                   var AdvScenarioDataKey = (string)labelToAdvScenarioDataKeyValuePairType.GetProperty( "Key" )
                      .GetValue( labelToAdvScenarioDataKeyValuePair, empty );
@@ -44,10 +56,15 @@ namespace XUnity.AutoTranslator.Plugin.Core.Utilities
 
                      var labelToAdvScenarioLabelData = ScenarioLabelsProperty.GetValue( AdvScenarioData, empty );
 
-                     foreach( object labelToAdvScenarioLabelDataKeyValuePair in (IEnumerable)labelToAdvScenarioLabelData )
+#if IL2CPP
+                     var iterable2 = new ManagedDictionaryEnumerable( labelToAdvScenarioLabelData );
+#else
+                     labelToAdvScenarioLabelData.TryCastTo<IEnumerable>( out var iterable2 );
+#endif
+
+                     foreach( object labelToAdvScenarioLabelDataKeyValuePair in iterable2 )
                      {
-                        var labelToAdvScenarioLabelDataKeyValuePairType = typeof( KeyValuePair<,> )
-                           .MakeGenericType( new Type[] { typeof( string ), ClrTypes.AdvScenarioLabelData } );
+                        var labelToAdvScenarioLabelDataKeyValuePairType = labelToAdvScenarioLabelDataKeyValuePair.GetType();
 
                         var AdvScenarioLabelDataKey = (string)labelToAdvScenarioLabelDataKeyValuePairType.GetProperty( "Key" )
                            .GetValue( labelToAdvScenarioLabelDataKeyValuePair, empty );
@@ -65,7 +82,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Utilities
 
          if( !Labels.Contains( label ) )
          {
-            var scope = TranslationScopeProvider.GetScope( null );
+            var scope = TranslationScopeHelper.GetScope( null );
             if( AutoTranslationPlugin.Current.TextCache.TryGetReverseTranslation( label, scope, out string key ) )
             {
                label = key;

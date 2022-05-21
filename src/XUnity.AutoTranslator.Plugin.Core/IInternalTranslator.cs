@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using XUnity.AutoTranslator.Plugin.Core.Endpoints;
 
 namespace XUnity.AutoTranslator.Plugin.Core

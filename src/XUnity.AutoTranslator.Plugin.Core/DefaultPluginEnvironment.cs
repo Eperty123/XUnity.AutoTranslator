@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ExIni;
 using XUnity.Common.Constants;
+using XUnity.Common.Utilities;
 
 namespace XUnity.AutoTranslator.Plugin.Core
 {

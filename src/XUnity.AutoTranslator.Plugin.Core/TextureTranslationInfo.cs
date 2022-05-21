@@ -20,8 +20,10 @@ namespace XUnity.AutoTranslator.Plugin.Core
 
       private string _key;
       private byte[] _originalData;
+      private bool _initialized;
+      private TextureFormat _textureFormat;
 
-      public WeakReference<Texture2D> Original { get; private set; }
+      public XUnity.Common.Utilities.WeakReference<Texture2D> Original { get; private set; }
 
       public Texture2D Translated { get; private set; }
 
@@ -31,9 +33,26 @@ namespace XUnity.AutoTranslator.Plugin.Core
 
       public bool IsDumped { get; set; }
 
+      public bool UsingReplacedTexture { get; set; }
+
+      // INTIALIZE to set texture format???
+      // We also have specialized hooks for legacy textures???
+      public void Initialize( Texture2D texture )
+      {
+         if( !_initialized )
+         {
+            _initialized = true;
+
+            // NOT ALLOWED!!!!
+            _textureFormat = texture.format;
+
+            SetOriginal( texture );
+         }
+      }
+
       public void SetOriginal( Texture2D texture )
       {
-         Original = WeakReference<Texture2D>.Create( texture );
+         Original = XUnity.Common.Utilities.WeakReference<Texture2D>.Create( texture );
       }
 
       private void SetTranslated( Texture2D texture )
@@ -41,24 +60,21 @@ namespace XUnity.AutoTranslator.Plugin.Core
          Translated = texture;
       }
 
-      public void CreateTranslatedTexture( byte[] newData )
+      public void CreateTranslatedTexture( byte[] newData, ImageFormat format )
       {
          if( Translated == null )
          {
             var orig = Original.Target;
 
-            var texture = new Texture2D( 2, 2, TextureFormat.ARGB32, false );
-            texture.LoadImageEx( newData );
-
-            texture.name = orig.name;
-            texture.anisoLevel = orig.anisoLevel;
-            texture.filterMode = orig.filterMode;
-            texture.mipMapBias = orig.mipMapBias;
-            texture.wrapMode = orig.wrapMode;
+            var texture = ComponentHelper.CreateEmptyTexture2D( _textureFormat );
+#warning HideAndDontSave?
+            texture.LoadImageEx( newData, format, orig );
 
             SetTranslated( texture );
 
             texture.SetExtensionData( this );
+
+            UsingReplacedTexture = true;
          }
       }
 
@@ -66,8 +82,9 @@ namespace XUnity.AutoTranslator.Plugin.Core
       {
          if( !Original.IsAlive && _originalData != null )
          {
-            var texture = new Texture2D( 2, 2, TextureFormat.ARGB32, false );
-            texture.LoadImageEx( _originalData );
+            var texture = ComponentHelper.CreateEmptyTexture2D( _textureFormat );
+            texture.LoadImageEx( _originalData, ImageFormat.PNG, null );
+
             SetOriginal( texture );
          }
       }
@@ -91,7 +108,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
 
          SetupHashAndData( Original.Target );
          if( _originalData != null ) return _originalData;
-         return TextureHelper.GetData( Original.Target ).Data;
+         return Original.Target.GetTextureData().Data;
       }
 
       private TextureDataResult SetupKeyForNameWithFallback( string name, Texture2D texture )
@@ -104,7 +121,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
 
          if( Settings.DetectDuplicateTextureNames )
          {
-            result = TextureHelper.GetData( texture );
+            result = texture.GetTextureData();
             hash = HashHelper.Compute( result.Data );
 
             if( NameToHash.TryGetValue( name, out existingHash ) )
@@ -129,7 +146,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
             {
                if( result == null )
                {
-                  result = TextureHelper.GetData( texture );
+                  result = texture.GetTextureData();
                }
 
                hash = HashHelper.Compute( result.Data );
@@ -145,7 +162,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
          if( detectedDuplicateName && Settings.EnableTextureDumping )
          {
             var oldKey = HashHelper.Compute( UTF8.GetBytes( name ) );
-            AutoTranslationPlugin.Current.RenameTextureWithKey( name, oldKey, existingHash );
+            AutoTranslationPlugin.Current.TextureCache.RenameFileWithKey( name, oldKey, existingHash );
          }
 
          return result;
@@ -157,15 +174,15 @@ namespace XUnity.AutoTranslator.Plugin.Core
          {
             if( Settings.TextureHashGenerationStrategy == TextureHashGenerationStrategy.FromImageData )
             {
-               var result = TextureHelper.GetData( texture );
+               var result = texture.GetTextureData();
 
                _originalData = result.Data;
                _key = HashHelper.Compute( _originalData );
             }
             else if( Settings.TextureHashGenerationStrategy == TextureHashGenerationStrategy.FromImageName )
             {
-               var name = texture.name; // name may be duplicate, WILL be duplicate!
-               if( string.IsNullOrEmpty( name ) ) return;
+               var name = texture.GetTextureName( null ); // name may be duplicate, WILL be duplicate!
+               if( name == null ) return;
 
                var result = SetupKeyForNameWithFallback( name, texture );
 
@@ -173,7 +190,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
                {
                   if( result == null )
                   {
-                     result = TextureHelper.GetData( texture );
+                     result = texture.GetTextureData();
                   }
 
                   _originalData = result.Data;
@@ -181,10 +198,10 @@ namespace XUnity.AutoTranslator.Plugin.Core
             }
             else if( Settings.TextureHashGenerationStrategy == TextureHashGenerationStrategy.FromImageNameAndScene )
             {
-               var name = texture.name; // name may be duplicate, WILL be duplicate!
-               if( string.IsNullOrEmpty( name ) ) return;
+               var name = texture.GetTextureName( null ); // name may be duplicate, WILL be duplicate!
+               if( name == null ) return;
 
-               name += "|" + SceneManagerHelper.GetActiveSceneId().ToString();
+               name += "|" + TranslationScopeHelper.GetActiveSceneId().ToString();
 
                var result = SetupKeyForNameWithFallback( name, texture );
 
@@ -192,7 +209,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
                {
                   if( result == null )
                   {
-                     result = TextureHelper.GetData( texture );
+                     result = texture.GetTextureData();
                   }
 
                   _originalData = result.Data;

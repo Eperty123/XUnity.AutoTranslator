@@ -12,8 +12,6 @@ using XUnity.Common.Utilities;
 
 namespace XUnity.AutoTranslator.Plugin.Core.Text
 {
-
-
    internal class DefaultTextComponentManipulator : ITextComponentManipulator
    {
       private static readonly string TextPropertyName = "text";
@@ -36,99 +34,10 @@ namespace XUnity.AutoTranslator.Plugin.Core.Text
       {
          var type = _type;
 
-         if( ClrTypes.AdvUguiMessageWindow != null && ClrTypes.UguiNovelText?.IsAssignableFrom( type ) == true )
+#if MANAGED
+         if( UnityTypes.TextWindow != null && UnityTypes.TextMeshPro?.ClrType.IsAssignableFrom( type ) == true )
          {
-            var uguiMessageWindow = GameObject.FindObjectOfType( ClrTypes.AdvUguiMessageWindow );
-            if( uguiMessageWindow != null )
-            {
-
-               var uguiNovelText = ClrTypes.AdvUguiMessageWindow_Properties.Text?.Get( uguiMessageWindow )
-                  ?? ClrTypes.AdvUguiMessageWindow_Fields.text?.GetValue( uguiMessageWindow );
-
-
-               if( Equals( uguiNovelText, ui ) )
-               {
-                  string previousNameText = null;
-                  var nameText = ClrTypes.AdvUguiMessageWindow_Fields.nameText.GetValue( uguiMessageWindow ) as UnityEngine.Object;
-                  if( nameText )
-                  {
-                     previousNameText = (string)ClrTypes.Text.CachedProperty( TextPropertyName ).Get( nameText );
-                  }
-
-                  var engine = ClrTypes.AdvUguiMessageWindow_Properties.Engine?.Get( uguiMessageWindow )
-                     ?? ClrTypes.AdvUguiMessageWindow_Fields.engine.GetValue( uguiMessageWindow );
-                  var page = ClrTypes.AdvEngine_Properties.Page.Get( engine );
-
-                  var remakeTextData = ClrTypes.AdvPage_Methods.RemakeTextData;
-                  var remakeText = ClrTypes.AdvPage_Methods.RemakeText;
-                  var changeMessageWindowText = ClrTypes.AdvPage_Methods.ChangeMessageWindowText;
-
-                  if( changeMessageWindowText != null )
-                  {
-                     var nameText0 = (string)page.GetType().GetProperty( "NameText" )?.GetValue( page, null );
-                     var characterLabel0 = (string)page.GetType().GetProperty( "CharacterLabel" )?.GetValue( page, null );
-                     var windowType0 = (string)page.GetType().GetProperty( "WindowType" )?.GetValue( page, null );
-
-                     changeMessageWindowText.Invoke( page, new object[] { nameText0, characterLabel0, text, windowType0 } );
-                  }
-                  else
-                  {
-                     var flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-                     var textData = ClrTypes.TextData.GetConstructor( new[] { typeof( string ) } ).Invoke( new[] { text } );
-                     var length = (int)textData.GetType().GetProperty( "Length", flags ).GetValue( textData, null );
-
-                     if( remakeTextData == null )
-                     {
-                        try
-                        {
-                           Settings.InvokeEvents = false;
-
-                           page.GetType().GetProperty( "TextData", flags ).SetValue( page, textData, null );
-                           page.GetType().GetProperty( "CurrentTextLengthMax", flags ).GetSetMethod( true ).Invoke( page, new object[] { length } );
-                           page.GetType().GetProperty( "Status", flags ).GetSetMethod( true ).Invoke( page, new object[] { 1 /*SendChar*/ } );
-
-                           var messageWindowManager = engine.GetType().GetProperty( "MessageWindowManager", flags ).GetValue( engine, null );
-                           messageWindowManager.GetType().GetMethod( "OnPageTextChange", flags ).Invoke( messageWindowManager, new object[] { page } );
-                        }
-                        finally
-                        {
-                           Settings.InvokeEvents = true;
-                        }
-                     }
-                     else
-                     {
-                        try
-                        {
-                           Settings.InvokeEvents = false;
-                           Settings.RemakeTextData = advPage =>
-                           {
-                              advPage.GetType().GetProperty( "TextData", flags ).SetValue( page, textData, null );
-                              advPage.GetType().GetProperty( "CurrentTextLengthMax", flags ).GetSetMethod( true ).Invoke( page, new object[] { length } );
-                           };
-
-                           remakeText.Invoke( page );
-                        }
-                        finally
-                        {
-                           Settings.InvokeEvents = true;
-                           Settings.RemakeTextData = null;
-                        }
-                     }
-                  }
-
-                  if( nameText )
-                  {
-                     ClrTypes.Text.CachedProperty( TextPropertyName ).Set( nameText, previousNameText );
-                  }
-
-                  return;
-               }
-            }
-         }
-
-         if( ClrTypes.TextWindow != null && ClrTypes.TextMeshPro?.IsAssignableFrom( type ) == true )
-         {
-            var textWindow = GameObject.FindObjectOfType( ClrTypes.TextWindow );
+            var textWindow = GameObject.FindObjectOfType( UnityTypes.TextWindow.ClrType );
             if( textWindow != null )
             {
                var flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
@@ -138,7 +47,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Text
                   if( Equals( textMesh, ui ) )
                   {
                      var frames = new StackTrace().GetFrames();
-                     if( frames.Any( x => x.GetMethod().DeclaringType == ClrTypes.TextWindow ) )
+                     if( frames.Any( x => x.GetMethod().DeclaringType == UnityTypes.TextWindow.ClrType ) )
                      {
                         // If inline (sync)
 
@@ -190,6 +99,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Text
                }
             }
          }
+#endif
 
          // fallback to reflective approach
          var property = _property;
@@ -197,6 +107,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Text
          {
             property.Set( ui, text );
 
+#if MANAGED
             if( Settings.IgnoreVirtualTextSetterCallingRules )
             {
                var newText = (string)property.Get( ui );
@@ -217,6 +128,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Text
                   }
                }
             }
+#endif
          }
 
          // TMPro
@@ -230,14 +142,16 @@ namespace XUnity.AutoTranslator.Plugin.Core.Text
             }
          }
 
-         if( ClrTypes.TextExpansion_Methods.SetMessageType != null && ClrTypes.TextExpansion_Methods.SkipTypeWriter != null )
+#if MANAGED
+         if( UnityTypes.TextExpansion_Methods.SetMessageType != null && UnityTypes.TextExpansion_Methods.SkipTypeWriter != null )
          {
-            if( ClrTypes.TextExpansion.IsAssignableFrom( type ) )
+            if( UnityTypes.TextExpansion.ClrType.IsAssignableFrom( type ) )
             {
-               ClrTypes.TextExpansion_Methods.SetMessageType.Invoke( ui, 1 );
-               ClrTypes.TextExpansion_Methods.SkipTypeWriter.Invoke( ui );
+               UnityTypes.TextExpansion_Methods.SetMessageType.Invoke( ui, 1 );
+               UnityTypes.TextExpansion_Methods.SkipTypeWriter.Invoke( ui );
             }
          }
+#endif
       }
 
       private static Dictionary<Type, TypeAndMethod> _textSetters = new Dictionary<Type, TypeAndMethod>();

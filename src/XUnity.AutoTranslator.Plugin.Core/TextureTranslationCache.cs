@@ -1,6 +1,7 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -57,10 +58,22 @@ namespace XUnity.AutoTranslator.Plugin.Core
       }
    }
 
+   enum ImageFormat
+   {
+      PNG = 0,
+      TGA = 1
+   }
+
    class TranslatedImage
    {
+      private static readonly Dictionary<string, ImageFormat> Formats = new Dictionary<string, ImageFormat>( StringComparer.OrdinalIgnoreCase )
+      {
+         { ".png", ImageFormat.PNG },
+         { ".tga", ImageFormat.TGA },
+      };
+
       private readonly ITranslatedImageSource _source;
-      private WeakReference<byte[]> _weakData;
+      private XUnity.Common.Utilities.WeakReference<byte[]> _weakData;
       private byte[] _data;
 
       public TranslatedImage( string fileName, byte[] data, ITranslatedImageSource source )
@@ -69,9 +82,12 @@ namespace XUnity.AutoTranslator.Plugin.Core
 
          FileName = fileName;
          Data = data;
+         ImageFormat = Formats[ Path.GetExtension( fileName ) ];
       }
 
       public string FileName { get; }
+
+      internal ImageFormat ImageFormat { get; }
 
       private byte[] Data
       {
@@ -83,7 +99,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
             }
             else
             {
-               _weakData = WeakReference<byte[]>.Create( value );
+               _weakData = XUnity.Common.Utilities.WeakReference<byte[]>.Create( value );
             }
          }
          get
@@ -103,7 +119,6 @@ namespace XUnity.AutoTranslator.Plugin.Core
             }
          }
       }
-
       public byte[] GetData()
       {
          var data = Data;
@@ -377,14 +392,14 @@ namespace XUnity.AutoTranslator.Plugin.Core
          return _translatedImages.ContainsKey( key ) || _untranslatedImages.Contains( key );
       }
 
-      internal bool TryGetTranslatedImage( string key, out byte[] data )
+      internal bool TryGetTranslatedImage( string key, out byte[] data, out TranslatedImage image )
       {
          if( _translatedImages.TryGetValue( key, out var translatedImage ) )
          {
             try
             {
                data = translatedImage.GetData();
-
+               image = translatedImage;
                return data != null;
             }
             catch( Exception e )
@@ -397,6 +412,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
          }
 
          data = null;
+         image = null;
          return false;
       }
 

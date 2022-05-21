@@ -8,10 +8,7 @@ using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
 using XUnity.AutoTranslator.Plugin.Core.Constants;
 using XUnity.AutoTranslator.Plugin.Core.Extensions;
-using XUnity.AutoTranslator.Plugin.Core.Hooks.FairyGUI;
-using XUnity.AutoTranslator.Plugin.Core.Hooks.IMGUI;
 using XUnity.AutoTranslator.Plugin.Core.Hooks.NGUI;
-using XUnity.AutoTranslator.Plugin.Core.Hooks.TextGetterCompat;
 using XUnity.AutoTranslator.Plugin.Core.Hooks.TextMeshPro;
 using XUnity.AutoTranslator.Plugin.Core.Hooks.UGUI;
 using XUnity.Common.Logging;
@@ -27,7 +24,11 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
          {
             if( Settings.TextGetterCompatibilityMode )
             {
+#if MANAGED
                HookingHelper.PatchAll( TextGetterCompatHooks.All, Settings.ForceMonoModHooks );
+#else
+               throw new NotImplementedException("TextGetterCompatibilityMode is not supported in IL2CPP.");
+#endif
             }
          }
          catch( Exception e )
@@ -135,7 +136,11 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
          {
             if( Settings.EnableIMGUI )
             {
+#if MANAGED
                HookingHelper.PatchAll( IMGUIHooks.All, Settings.ForceMonoModHooks );
+#else
+               throw new NotImplementedException("EnableIMGUI is not supported in IL2CPP.");
+#endif
             }
          }
          catch( Exception e )
@@ -187,7 +192,11 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
                _installedPluginTranslationHooks = true;
                try
                {
+#if MANAGED
                   HookingHelper.PatchAll( PluginTranslationHooks.All, Settings.ForceMonoModHooks );
+#else
+                  throw new NotImplementedException("Plugin specific hooks are not supported in IL2CPP.");
+#endif
                }
                catch( Exception e )
                {
@@ -202,6 +211,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
       {
          if( Settings.EnableIMGUI && !_installedAssemblies.Contains( assembly ) )
          {
+#if MANAGED
             if( final )
             {
                IMGUIPluginTranslationHooks.ResetHandledForAllInAssembly( assembly );
@@ -231,6 +241,9 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
             {
                _installedAssemblies.Add( assembly );
             }
+#else
+            throw new NotImplementedException("Plugin specific hooks are not supported in IL2CPP.");
+#endif
          }
       }
    }

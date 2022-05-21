@@ -1,13 +1,16 @@
 ﻿using System;
 using System.IO;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
+using XUnity.AutoTranslator.Plugin.Core.Extensions;
+using XUnity.Common.Extensions;
 using XUnity.Common.Logging;
+using XUnity.Common.Utilities;
 using XUnity.ResourceRedirector;
 
 namespace XUnity.AutoTranslator.Plugin.Core.AssetRedirection
 {
    /// <summary>
-   /// Base implementation of resource redirect handler that takes care of the plumming for a
+   /// Base implementation of resource redirect handler that takes care of the plumbing for a
    /// resource redirector that is interested in either updating or dumping redirected resources.
    /// </summary>
    /// <typeparam name="TAsset">The type of asset being redirected.</typeparam>
@@ -35,7 +38,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.AssetRedirection
 
       private void Handle( IAssetOrResourceLoadedContext context )
       {
-         if( context.Asset is TAsset castedAsset && ShouldHandleAsset( castedAsset, context ) )
+         if( context.Asset.TryCastTo<TAsset>( out var castedAsset ) && ShouldHandleAsset( castedAsset, context ) )
          {
             var unqiuePath = context.GetUniqueFileSystemAssetPath( castedAsset );
             var modificationFilePath = CalculateModificationFilePath( castedAsset, context );
@@ -88,7 +91,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.AssetRedirection
                }
             }
 
-            if( !ReferenceEquals( castedAsset, context.Asset ) )
+            if( !UnityObjectReferenceComparer.Default.Equals( castedAsset, context.Asset ) )
             {
                context.Asset = castedAsset;
             }

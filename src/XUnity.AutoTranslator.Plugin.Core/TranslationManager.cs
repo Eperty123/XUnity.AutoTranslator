@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
 using XUnity.AutoTranslator.Plugin.Core.Endpoints;
 using XUnity.AutoTranslator.Plugin.Core.Web;
+using XUnity.Common.Constants;
 using XUnity.Common.Logging;
 
 namespace XUnity.AutoTranslator.Plugin.Core
@@ -49,14 +49,13 @@ namespace XUnity.AutoTranslator.Plugin.Core
             && FallbackEndpoint != endpoint;
       }
 
-      public void InitializeEndpoints( GameObject go )
+      public void InitializeEndpoints()
       {
          try
          {
             var httpSecurity = new HttpSecurity();
-            var context = new InitializationContext( httpSecurity, Settings.FromLanguage, Settings.Language );
 
-            CreateEndpoints( go, context );
+            CreateEndpoints( httpSecurity );
 
             AllEndpoints = AllEndpoints
                .OrderBy( x => x.Error != null )
@@ -109,7 +108,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
             else
             {
                var callback = httpSecurity.GetCertificateValidationCheck();
-               if( callback != null && !Features.SupportsNet4x )
+               if( callback != null && !ClrFeatures.SupportsNet4x )
                {
                   XuaLogger.AutoTranslator.Debug( $"Disabling certificate checks for endpoints because a .NET 3.x runtime is used." );
 
@@ -132,7 +131,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
          }
       }
 
-      public void CreateEndpoints( GameObject go, InitializationContext context )
+      public void CreateEndpoints( HttpSecurity httpSecurity )
       {
          if( Settings.FromLanguage != Settings.Language )
          {
@@ -143,7 +142,7 @@ namespace XUnity.AutoTranslator.Plugin.Core
 
             foreach( var type in dynamicTypes )
             {
-               AddEndpoint( go, context, type );
+               AddEndpoint( httpSecurity, type );
             }
          }
          else
@@ -155,22 +154,12 @@ namespace XUnity.AutoTranslator.Plugin.Core
          }
       }
 
-      private void AddEndpoint( GameObject go, InitializationContext context, Type type )
+      private void AddEndpoint( HttpSecurity httpSecurity, Type type )
       {
          ITranslateEndpoint endpoint;
          try
          {
-            if( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
-            {
-               // allow implementing plugins to hook into Unity lifecycle
-               endpoint = (ITranslateEndpoint)go.AddComponent( type );
-               UnityEngine.Object.DontDestroyOnLoad( (UnityEngine.Object)endpoint );
-            }
-            else
-            {
-               // or... just use any old object
-               endpoint = (ITranslateEndpoint)Activator.CreateInstance( type );
-            }
+            endpoint = (ITranslateEndpoint)Activator.CreateInstance( type );
          }
          catch( Exception e )
          {
@@ -178,15 +167,16 @@ namespace XUnity.AutoTranslator.Plugin.Core
             return;
          }
 
+         var context = new InitializationContext( httpSecurity, Settings.FromLanguage, Settings.Language );
          try
          {
             endpoint.Initialize( context );
-            var manager = new TranslationEndpointManager( endpoint, null );
+            var manager = new TranslationEndpointManager( endpoint, null, context );
             RegisterEndpoint( manager );
          }
          catch( Exception e )
          {
-            var manager = new TranslationEndpointManager( endpoint, e );
+            var manager = new TranslationEndpointManager( endpoint, e, context );
             RegisterEndpoint( manager );
          }
       }

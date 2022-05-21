@@ -12,6 +12,8 @@ namespace UnityEngine
 {
    public sealed class AssetBundle : Object
    {
+      public AssetBundle( IntPtr pointer ) : base( IntPtr.Zero ) => throw new NotImplementedException();
+
       public Object mainAsset
       {
          get;
@@ -60,7 +62,11 @@ namespace UnityEngine
          return LoadFromMemoryAsync( binary, crc );
       }
 
+#if IL2CPP
+      public static extern AssetBundle LoadFromMemory( UnhollowerBaseLib.Il2CppStructArray<byte> binary, uint crc );
+#else
       public static extern AssetBundle LoadFromMemory( byte[] binary, uint crc );
+#endif
 
       public static AssetBundle LoadFromMemory( byte[] binary )
       {

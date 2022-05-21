@@ -12,6 +12,8 @@ namespace UnityEngine
 {
    public class Component : Object
    {
+      public Component( IntPtr pointer ) : base( IntPtr.Zero ) => throw new NotImplementedException();
+
       public Transform transform => throw new NotImplementedException();
 
       public GameObject gameObject => throw new NotImplementedException();
@@ -22,7 +24,11 @@ namespace UnityEngine
          set => throw new NotImplementedException();
       }
 
+#if IL2CPP
+      public Component GetComponent( Il2CppSystem.Type type ) => throw new NotImplementedException();
+#else
       public Component GetComponent( Type type ) => throw new NotImplementedException();
+#endif
 
       public T GetComponent<T>() => throw new NotImplementedException();
 

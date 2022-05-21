@@ -25,9 +25,13 @@ namespace XUnity.AutoTranslator.Plugin.Core
          {
             startIdx++;
             var endIdx = key.LastIndexOf( '"' );
-            if( endIdx != startIdx )
+            if( endIdx != startIdx - 1 )
             {
                key = key.Substring( startIdx, endIdx - startIdx );
+            }
+            else
+            {
+               throw new Exception( $"Splitter regex with key: '{Key}' starts with a \" but does not end with a \"." );
             }
          }
 
@@ -46,9 +50,13 @@ namespace XUnity.AutoTranslator.Plugin.Core
          {
             startIdx++;
             var endIdx = value.LastIndexOf( '"' );
-            if( endIdx != startIdx )
+            if( endIdx != startIdx - 1)
             {
                value = value.Substring( startIdx, endIdx - startIdx );
+            }
+            else
+            {
+               throw new Exception( $"Splitter regex with value: '{Value}' starts with a \" but does not end with a \"." );
             }
          }
 

@@ -121,7 +121,7 @@ namespace BaiduTranslate
          {
             var delay = _delay - timeSinceLast;
 
-            var instruction = Features.GetWaitForSecondsRealtime( delay );
+            var instruction = CoroutineHelper.CreateWaitForSecondsRealtime( delay );
             if( instruction != null )
             {
                yield return instruction;
@@ -148,7 +148,7 @@ namespace BaiduTranslate
          var request = new XUnityWebRequest(
             string.Format(
                HttpServicePointTemplateUrl,
-               WwwHelper.EscapeUrl( context.UntranslatedText ),
+               Uri.EscapeDataString( context.UntranslatedText ),
                FixLanguage( context.SourceLanguage ),
                FixLanguage( context.DestinationLanguage ),
                _appId,

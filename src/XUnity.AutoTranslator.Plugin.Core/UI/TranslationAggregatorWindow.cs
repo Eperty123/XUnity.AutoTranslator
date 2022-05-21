@@ -43,7 +43,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.UI
       {
          _windowRect.height = WindowHeight;
          _windowRect.width = _viewModel.Width;
-         _windowRect = GUI.Window( WindowId, _windowRect, CreateWindowUI, "---- Translation Aggregator ----" );
+         _windowRect = GUI.Window( WindowId, _windowRect, (GUI.WindowFunction)CreateWindowUI, "---- Translation Aggregator ----" );
 
          if( GUIUtil.IsAnyMouseButtonOrScrollWheelDownSafe )
          {
@@ -211,7 +211,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.UI
 
          foreach( var text in texts )
          {
-            GUILayout.Label( text, GUIUtil.LabelTranslation );
+            GUILayout.Label( text, GUIUtil.LabelTranslation, null );
          }
 
          GUILayout.EndScrollView();

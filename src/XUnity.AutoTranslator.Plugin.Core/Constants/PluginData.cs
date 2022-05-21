@@ -23,6 +23,11 @@ namespace XUnity.AutoTranslator.Plugin.Core.Constants
       /// <summary>
       /// Gets the version of the plugin.
       /// </summary>
-      public const string Version = "4.19.0";
+      public const string Version = "5.1.0";
+
+      /// <summary>
+      /// Gets the author of the plugin.
+      /// </summary>
+      public const string Author = "gravydevsupreme";
    }
 }

@@ -8,7 +8,7 @@ using XUnity.Common.Harmony;
 using XUnity.Common.MonoMod;
 using XUnity.Common.Utilities;
 
-namespace XUnity.AutoTranslator.Plugin.Core.Hooks.FairyGUI
+namespace XUnity.AutoTranslator.Plugin.Core.Hooks
 {
    internal static class FairyGUIHooks
    {
@@ -23,19 +23,28 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks.FairyGUI
    {
       static bool Prepare( object instance )
       {
-         return ClrTypes.TextField != null;
+         return UnityTypes.TextField != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return AccessToolsShim.Property( ClrTypes.TextField, "text" )?.GetSetMethod();
+         return AccessToolsShim.Property( UnityTypes.TextField?.ClrType, "text" )?.GetSetMethod();
       }
 
+#if MANAGED
       static void Postfix( object __instance )
+#else
+      static void Postfix( UnhollowerBaseLib.Il2CppObjectBase __instance )
+#endif
       {
+#if IL2CPP
+         __instance = Il2CppUtilities.CreateProxyComponentWithDerivedType( __instance.Pointer, UnityTypes.TextField.ClrType );
+#endif
+
          AutoTranslationPlugin.Current.Hook_TextChanged( __instance, false );
       }
 
+#if MANAGED
       static Action<object, string> _original;
 
       static void MM_Init( object detour )
@@ -49,6 +58,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks.FairyGUI
 
          Postfix( __instance );
       }
+#endif
    }
 
    [HookingHelperPriority( HookPriority.Last )]
@@ -56,19 +66,29 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks.FairyGUI
    {
       static bool Prepare( object instance )
       {
-         return ClrTypes.TextField != null;
+         return UnityTypes.TextField != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return AccessToolsShim.Property( ClrTypes.TextField, "htmlText" )?.GetSetMethod();
+         return AccessToolsShim.Property( UnityTypes.TextField?.ClrType, "htmlText" )?.GetSetMethod();
       }
 
+
+#if MANAGED
       static void Postfix( object __instance )
+#else
+      static void Postfix( UnhollowerBaseLib.Il2CppObjectBase __instance )
+#endif
       {
+#if IL2CPP
+         __instance = Il2CppUtilities.CreateProxyComponentWithDerivedType( __instance.Pointer, UnityTypes.TextField.ClrType );
+#endif
+
          AutoTranslationPlugin.Current.Hook_TextChanged( __instance, false );
       }
 
+#if MANAGED
       static Action<object, string> _original;
 
       static void MM_Init( object detour )
@@ -82,5 +102,6 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks.FairyGUI
 
          Postfix( __instance );
       }
+#endif
    }
 }

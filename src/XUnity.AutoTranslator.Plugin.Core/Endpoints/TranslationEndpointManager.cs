@@ -7,7 +7,7 @@ using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
 using XUnity.AutoTranslator.Plugin.Core.Extensions;
 using XUnity.AutoTranslator.Plugin.Core.Parsing;
-using XUnity.AutoTranslator.Plugin.Core.Shim;
+using XUnity.AutoTranslator.Plugin.Core.Shims;
 using XUnity.AutoTranslator.Plugin.Core.Utilities;
 using XUnity.AutoTranslator.Plugin.Utilities;
 using XUnity.Common.Extensions;
@@ -39,7 +39,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
       private Dictionary<string, string> _translations;
       private Dictionary<string, string> _reverseTranslations;
 
-      public TranslationEndpointManager( ITranslateEndpoint endpoint, Exception error )
+      public TranslationEndpointManager( ITranslateEndpoint endpoint, Exception error, InitializationContext context  )
       {
          Endpoint = endpoint;
          Error = error;
@@ -55,6 +55,14 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
 
          HasBatchLogicFailed = false;
          AvailableBatchOperations = Settings.MaxAvailableBatchOperations;
+
+         EnableSpamChecks = context.SpamChecksEnabled;
+         TranslationDelay = context.TranslationDelay;
+         MaxRetries = (int)( 60 / context.TranslationDelay );
+         if( MaxRetries < 3 )
+         {
+            MaxRetries = 3;
+         }
       }
 
       public TranslationManager Manager { get; set; }
@@ -78,6 +86,12 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
       public bool HasUnstartedJob => _unstartedJobs.Count > 0;
 
       public bool HasFailedDueToConsecutiveErrors => ConsecutiveErrors >= Settings.MaxErrors;
+
+      public bool EnableSpamChecks { get; set; } = true;
+
+      public float TranslationDelay { get; set; } = Settings.DefaultTranslationDelay;
+
+      public int MaxRetries { get; set; } = Settings.DefaultMaxRetries;
 
       public bool TryGetTranslation( UntranslatedText key, out string value )
       {
@@ -280,10 +294,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
 
       private string GetTextToTranslate( TranslationJob job )
       {
-         bool isNgui = job.Components.Any( x => x.Item.IsNGUI() )
-            || job.Contexts.Any( x => x.Component.IsNGUI() );
-
-         var removeInternalWhitespace = ( Settings.IgnoreWhitespaceInDialogue && job.Key.Original_Text.Length > Settings.MinDialogueChars ) || ( Settings.IgnoreWhitespaceInNGUI && isNgui );
+         var removeInternalWhitespace = Settings.IgnoreWhitespaceInDialogue && job.Key.Original_Text.Length > Settings.MinDialogueChars;
 
          string text;
          if( removeInternalWhitespace )
@@ -625,7 +636,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
 
       private IEnumerator EnableBatchingAfterDelay()
       {
-         yield return new WaitForSeconds( 60 );
+         yield return CoroutineHelper.CreateWaitForSeconds( 60f );
 
          HasBatchLogicFailed = false;
 
@@ -813,7 +824,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints
          {
             if( Settings.SimulateDelayedError )
             {
-               yield return new WaitForSeconds( 1 );
+               yield return CoroutineHelper.CreateWaitForSeconds( 1f );
 
                context.FailWithoutThrowing( "Simulating delayed error. Press CTRL+ALT+NP8 to disable!", null );
             }

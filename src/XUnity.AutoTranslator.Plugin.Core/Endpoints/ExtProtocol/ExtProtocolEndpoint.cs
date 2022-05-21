@@ -7,10 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
+using XUnity.AutoTranslator.Plugin.Core.Utilities;
 using XUnity.AutoTranslator.Plugin.Core.Web;
 using XUnity.AutoTranslator.Plugin.ExtProtocol;
 using XUnity.Common.Constants;
 using XUnity.Common.Logging;
+using XUnity.Common.Utilities;
 
 namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
 {
@@ -20,7 +22,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
    /// </summary>
    public abstract class ExtProtocolEndpoint : IMonoBehaviour_Update, ITranslateEndpoint, IDisposable
    {
-      private static readonly System.Random Rng = new System.Random();
+      private static readonly Random Rng = new Random();
 
       private readonly Dictionary<Guid, ProtocolTransactionHandle> _transactionHandles = new Dictionary<Guid, ProtocolTransactionHandle>();
       private readonly object _sync = new object();
@@ -32,6 +34,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
       private bool _initializing;
       private bool _failed;
       private float _lastRequestTimestamp;
+      private string _gameRoot;
 
       /// <summary>
       /// Gets the id of the ITranslateEndpoint that is used as a configuration parameter.
@@ -91,6 +94,8 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
       /// </summary>
       public virtual void Initialize( IInitializationContext context )
       {
+         _gameRoot = Paths.GameRoot;
+
          string exePath = null;
          if( ConfigurationSectionName != null )
          {
@@ -132,7 +137,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
                {
                   try
                   {
-                     fullPath = Path.Combine( Paths.GameRoot, ExecutablePath );
+                     fullPath = Path.Combine( _gameRoot, ExecutablePath );
                   }
                   catch
                   {
@@ -255,7 +260,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
 
          while( _initializing && !_failed )
          {
-            var instruction = Features.GetWaitForSecondsRealtime( 0.2f );
+            var instruction = CoroutineHelper.CreateWaitForSecondsRealtime( 0.2f );
             if( instruction != null )
             {
                yield return instruction;
@@ -274,7 +279,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
          {
             var remainingDelay = totalDelay - timeSinceLast;
 
-            var instruction = Features.GetWaitForSecondsRealtime( remainingDelay );
+            var instruction = CoroutineHelper.CreateWaitForSecondsRealtime( remainingDelay );
             if( instruction != null )
             {
                yield return instruction;
@@ -379,7 +384,7 @@ namespace XUnity.AutoTranslator.Plugin.Core.Endpoints.ExtProtocol
             {
                if( _process != null )
                {
-                  _process.Kill();
+                  //_process.Kill();
                   _process.Dispose();
                   _thread.Abort();
                }

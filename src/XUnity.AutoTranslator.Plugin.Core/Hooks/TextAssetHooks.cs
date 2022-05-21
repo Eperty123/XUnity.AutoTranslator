@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core.AssetRedirection;
+using XUnity.Common.Constants;
 using XUnity.Common.Harmony;
 using XUnity.Common.MonoMod;
 using XUnity.Common.Utilities;
@@ -24,15 +25,31 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
    {
       static bool Prepare( object instance )
       {
-         return true;
+         return UnityTypes.TextAsset != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return AccessToolsShim.Property( typeof( TextAsset ), "bytes" ).GetGetMethod();
+         return AccessToolsShim.Property( UnityTypes.TextAsset?.ClrType, "bytes" )?.GetGetMethod();
       }
 
-      delegate byte[] OriginalMethod( TextAsset self );
+#if MANAGED
+      static void Postfix( TextAsset __instance, ref byte[] __result )
+#else
+      static void Postfix( TextAsset __instance, ref UnhollowerBaseLib.Il2CppStructArray<byte> __result )
+#endif
+      {
+         if( __result == null ) return;
+
+         var ext = __instance.GetExtensionData<TextAssetExtensionData>();
+         if( ext != null )
+         {
+            __result = ext.Data;
+         }
+      }
+
+#if MANAGED
+      delegate byte[] OriginalMethod( TextAsset __instance );
 
       static OriginalMethod _original;
 
@@ -41,34 +58,40 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
          _original = detour.GenerateTrampolineEx<OriginalMethod>();
       }
 
-      static byte[] MM_Detour( TextAsset self )
+      static byte[] MM_Detour( TextAsset __instance )
       {
-         var result = _original( self );
-         if( result == null ) return null;
-
-         var ext = self.GetExtensionData<TextAssetExtensionData>();
-         if( ext != null )
-         {
-            return ext.Data;
-         }
-
-         return result;
+         var __result = _original( __instance );
+         Postfix( __instance, ref __result );
+         return __result;
       }
+#endif
    }
 
    internal static class TextAsset_text_Hook
    {
       static bool Prepare( object instance )
       {
-         return true;
+         return UnityTypes.TextAsset != null;
       }
 
       static MethodBase TargetMethod( object instance )
       {
-         return AccessToolsShim.Property( typeof( TextAsset ), "text" ).GetGetMethod();
+         return AccessToolsShim.Property( UnityTypes.TextAsset?.ClrType, "text" )?.GetGetMethod();
       }
 
-      delegate string OriginalMethod( TextAsset self );
+      static void Postfix( TextAsset __instance, ref string __result )
+      {
+         if( __result == null ) return;
+
+         var ext = __instance.GetExtensionData<TextAssetExtensionData>();
+         if( ext != null )
+         {
+            __result = ext.Text;
+         }
+      }
+
+#if MANAGED
+      delegate string OriginalMethod( TextAsset __instance );
 
       static OriginalMethod _original;
 
@@ -77,18 +100,12 @@ namespace XUnity.AutoTranslator.Plugin.Core.Hooks
          _original = detour.GenerateTrampolineEx<OriginalMethod>();
       }
 
-      static string MM_Detour( TextAsset self )
+      static string MM_Detour( TextAsset __instance )
       {
-         var result = _original( self );
-         if( result == null ) return null;
-
-         var ext = self.GetExtensionData<TextAssetExtensionData>();
-         if( ext != null )
-         {
-            return ext.Text;
-         }
-
-         return result;
+         var __result = _original( __instance );
+         Postfix( __instance, ref __result );
+         return __result;
       }
+#endif
    }
 }

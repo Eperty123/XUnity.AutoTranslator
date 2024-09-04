@@ -10,9 +10,9 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<DevelopmentDependency>True</DevelopmentDependency>
-		<TargetFrameworks>net35;net472</TargetFrameworks>
+		<TargetFrameworks>net35;net6.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
-		<Version>2.0.0</Version>
+		<Version>2.1.0</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,25 +27,35 @@
 		<DefineConstants>MANAGED</DefineConstants>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)'=='net472'">
+	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
 		<DefineConstants>IL2CPP</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
-		<Reference Include="UnhollowerBaseLib">
-			<HintPath>..\..\libs\Unhollower\UnhollowerBaseLib.dll</HintPath>
-		</Reference>
-		<Reference Include="UnhollowerRuntimeLib">
-			<HintPath>..\..\libs\Unhollower\UnhollowerRuntimeLib.dll</HintPath>
-		</Reference>
+	<ItemGroup Condition="'$(TargetFramework)'=='net35'">
+		<ProjectReference Include="..\UnityEngine\UnityEngine.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
 		<Reference Include="Il2Cppmscorlib">
 			<HintPath>..\..\libs\Proxies\Il2Cppmscorlib.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Runtime">
+			<HintPath>..\..\libs\Unhollower\Il2CppInterop.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Common">
+			<HintPath>..\..\libs\Unhollower\Il2CppInterop.Common.dll</HintPath>
+		</Reference>
+
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>..\..\libs\Proxies\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AssetBundleModule">
+			<HintPath>..\..\libs\Proxies\UnityEngine.AssetBundleModule.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\XUnity.Common\XUnity.Common.csproj" PrivateAssets="All" />
-		<ProjectReference Include="..\UnityEngine\UnityEngine.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

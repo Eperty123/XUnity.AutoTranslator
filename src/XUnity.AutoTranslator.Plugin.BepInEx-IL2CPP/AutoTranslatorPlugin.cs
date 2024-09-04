@@ -7,8 +7,8 @@ using System.Text;
 using BepInEx;
 using BepInEx.IL2CPP;
 using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using ExIni;
-using UnhollowerRuntimeLib;
 using UnityEngine;
 using XUnity.AutoTranslator.Plugin.Core;
 using XUnity.AutoTranslator.Plugin.Core.Configuration;
@@ -26,12 +26,27 @@ namespace XUnity.AutoTranslator.Plugin.BepInEx
 
       public AutoTranslatorPlugin()
       {
-         ConfigPath = global::BepInEx.Paths.ConfigPath;
-         TranslationPath = global::BepInEx.Paths.BepInExRootPath;
+         ConfigPath = Paths.ConfigPath;
+         TranslationPath = Paths.BepInExRootPath;
 
          _configPath = Path.Combine( ConfigPath, "AutoTranslatorConfig.ini" );
 
-         Il2CppProxyAssemblies.Location = Path.Combine( global::BepInEx.Paths.BepInExRootPath, "unhollowed" );
+         Il2CppProxyAssemblies.Location = GetIL2CPPInteropAssemblyPath();
+      }
+
+      private string GetIL2CPPInteropAssemblyPath()
+      {
+         // Il2CppInteropManager.IL2CPPInteropAssemblyPath is internal...
+         try
+         {
+            var Il2CppInteropManagerType = Type.GetType( "BepInEx.Unity.IL2CPP.Il2CppInteropManager, BepInEx.Unity.IL2CPP" );
+            return (string)Il2CppInteropManagerType.GetProperty( "IL2CPPInteropAssemblyPath", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public ).GetValue( null );
+         }
+         catch( Exception e )
+         {
+            Log.LogError( e );
+            return Path.Combine( Paths.BepInExRootPath, "interop" );
+         }
       }
 
       public override void Load()

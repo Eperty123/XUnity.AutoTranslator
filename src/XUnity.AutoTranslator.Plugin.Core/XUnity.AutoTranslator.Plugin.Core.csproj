@@ -10,8 +10,8 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<DevelopmentDependency>True</DevelopmentDependency>
-		<TargetFrameworks>net35;net472</TargetFrameworks>
-		<Version>5.1.0</Version>
+		<TargetFrameworks>net35;net6.0</TargetFrameworks>
+		<Version>5.3.1</Version>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
@@ -28,19 +28,39 @@
 		<DefineConstants>MANAGED</DefineConstants>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)'=='net472'">
+	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
 		<DefineConstants>IL2CPP</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
-		<Reference Include="UnhollowerBaseLib">
-			<HintPath>..\..\libs\Unhollower\UnhollowerBaseLib.dll</HintPath>
-		</Reference>
-		<Reference Include="UnhollowerRuntimeLib">
-			<HintPath>..\..\libs\Unhollower\UnhollowerRuntimeLib.dll</HintPath>
-		</Reference>
+	<ItemGroup Condition="'$(TargetFramework)'=='net35'">
+		<ProjectReference Include="..\UnityEngine\UnityEngine.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
 		<Reference Include="Il2Cppmscorlib">
 			<HintPath>..\..\libs\Proxies\Il2Cppmscorlib.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Runtime">
+			<HintPath>..\..\libs\Unhollower\Il2CppInterop.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Common">
+			<HintPath>..\..\libs\Unhollower\Il2CppInterop.Common.dll</HintPath>
+		</Reference>
+		
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>..\..\libs\Proxies\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TextRenderingModule">
+			<HintPath>..\..\libs\Proxies\UnityEngine.TextRenderingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AssetBundleModule">
+			<HintPath>..\..\libs\Proxies\UnityEngine.AssetBundleModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.IMGUIModule">
+			<HintPath>..\..\libs\Proxies\UnityEngine.IMGUIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityWebRequestWWWModule">
+			<HintPath>..\..\libs\Proxies\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
@@ -70,7 +90,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\UnityEngine\UnityEngine.csproj" />
 		<ProjectReference Include="..\XUnity.AutoTranslator.Plugin.ExtProtocol\XUnity.AutoTranslator.Plugin.ExtProtocol.csproj" PrivateAssets="All" />
 		<ProjectReference Include="..\XUnity.Common\XUnity.Common.csproj" PrivateAssets="All" />
 		<ProjectReference Include="..\XUnity.ResourceRedirector\XUnity.ResourceRedirector.csproj" PrivateAssets="All" />
@@ -92,7 +111,7 @@
 	</ItemGroup>
 
 	<!-- No idea why I need one for each -->
-	<Target Name="ILRepackNET472" AfterTargets="Build" Condition="'$(TargetFramework)'=='net472'">
+	<Target Name="ILRepackNET460" AfterTargets="Build" Condition="'$(TargetFramework)'=='net6.0'">
 		<PropertyGroup>
 			<WorkingDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\$(TargetFramework)</WorkingDirectory>
 		</PropertyGroup>
@@ -125,7 +144,7 @@
 		<Exec Command="if $(ConfigurationName) == Release (&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.AutoTranslator.Plugin.Core.dll&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.AutoTranslator.Plugin.Core.xml&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.AutoTranslator.Plugin.Core.pdb&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.AutoTranslator.Plugin.ExtProtocol.dll&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.AutoTranslator.Plugin.ExtProtocol.xml&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.AutoTranslator.Plugin.ExtProtocol.pdb&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.Common.dll&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.Common.xml&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.Common.pdb&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.ResourceRedirector.dll&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.ResourceRedirector.xml&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   XCOPY /Y /I &quot;$(TargetDir)XUnity.ResourceRedirector.pdb&quot; &quot;$(SolutionDir)dist\Developer\Developer\&quot;&#xD;&#xA;   COPY /Y &quot;$(SolutionDir)README.md&quot; &quot;$(SolutionDir)dist\Developer\Developer\README (AutoTranslator).md&quot;&#xD;&#xA;   &quot;$(SolutionDir)tools\xzip.exe&quot; &quot;$(SolutionDir)dist\Developer&quot; &quot;$(SolutionDir)dist\XUnity.AutoTranslator-Developer-@(VersionNumber).zip&quot;&#xD;&#xA;)" />
 	</Target>
 
-	<Target Name="PostBuildNET472" AfterTargets="ILRepackNET472" Condition="'$(TargetFramework)'=='net472'">
+	<Target Name="PostBuildNET472" AfterTargets="ILRepackNET460" Condition="'$(TargetFramework)'=='net6.0'">
 		<GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
 			<Output TaskParameter="Assemblies" ItemName="Targets" />
 		</GetAssemblyIdentity>
